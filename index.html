@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cola de Centros de Custo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .icon-container {
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Centros de Custo</h1>
+            <p class="text-slate-500 mt-2">Sua cola rápida para códigos e descrições.</p>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="mb-8 max-w-2xl mx-auto">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <input 
+                    type="text" 
+                    id="search" 
+                    class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm shadow-sm" 
+                    placeholder="Buscar por código ou nome...">
+            </div>
+        </div>
+
+        <!-- Cost Centers Grid -->
+        <div id="cost-center-list" class="space-y-6">
+            <!-- Categories will be injected here by JavaScript -->
+        </div>
+        
+        <div id="no-results" class="text-center py-12 text-slate-500 hidden">
+             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 10l4 4m0-4l-4 4" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-slate-800">Nenhum resultado encontrado</h3>
+            <p class="mt-1 text-sm text-slate-500">Tente ajustar seus termos de busca.</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white py-2 px-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out">
+        Código copiado!
+    </div>
+
+    <script>
+        const costCenterData = [
+            {
+                category: "Administrativo & Financeiro",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18h18m-1.5 18V5.25A2.25 2.25 0 0019.5 3h-15A2.25 2.25 0 002.25 5.25V21M3 10.5h18M12 21V10.5" /></svg>`,
+                items: [
+                    { code: "01001", description: "GASTOS ADMINISTRATIVOS - FILIAL PE" },
+                    { code: "01300", description: "PRO-LABORE - ADM" },
+                    { code: "1320", description: "DIRETORIA - ADM" },
+                    { code: "01330", description: "FP&A / CUSTOS - ADM" },
+                    { code: "01340", description: "CONTABILIDADE - ADM" },
+                    { code: "01350", description: "FISCAL - ADM" },
+                    { code: "1360", description: "FINANCEIRO - ADM" },
+                    { code: "1400", description: "RECURSOS HUMANOS - ADM" },
+                    { code: "01410", description: "TECNOLOGIA DA INFORMAÇÃO - ADM" },
+                    { code: "01420", description: "JURÍDICO - ADM" },
+                    { code: "01440", description: "SEGURANCA PATRIMONIAL - ADM" },
+                    { code: "01500", description: "ASSUNTOS REGULATÓRIOS - ADM" },
+                ]
+            },
+            {
+                category: "Vendas & Marketing",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`,
+                items: [
+                    { code: "1386", description: "VENDAS EXPORTAÇÃO - ADM" },
+                    { code: "1387", description: "VENDAS SM ADM" },
+                    { code: "1388", description: "CONTROLADORIA DE VENDAS - ADM" },
+                    { code: "1390", description: "VENDAS GERAL - ADM" },
+                    { code: "1391", description: "VENDAS CÁRNEOS - ADM" },
+                    { code: "1392", description: "VENDAS LÁCTEOS - ADM" },
+                    { code: "1393", description: "VENDAS SORVETES - ADM" },
+                    { code: "1394", description: "VENDAS NUTRACEUTICOS - ADM" },
+                    { code: "1395", description: "VENDAS INGREDIENTES AROMAS" },
+                    { code: "1396", description: "VENDAS PANIFICAÇÃO - ADM" },
+                    { code: "1398", description: "VENDAS NUTRI.ANIMAL - ADM" },
+                    { code: "1399", description: "VENDAS FOOD SERVICE - ADM" },
+                    { code: "01490", description: "MARKETING - ADM" },
+                    { code: "02233", description: "GASTOS REF. AS VENDAS DE ANALISES LAB." },
+                ]
+            },
+            {
+                category: "Logística & Supply Chain",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2.5-1.5L8 17l2.5-1.5L13 16z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16 16h2a2 2 0 002-2V6a2 2 0 00-2-2h-1" /></svg>`,
+                items: [
+                    { code: "1370", description: "SUPPLY CHAIN - ADM" },
+                    { code: "1380", description: "SUPPLY CHAIN IMPORTAÇÃO / MEIO AMBIENTE" },
+                    { code: "1430", description: "TRANSPORTE - ADM" },
+                    { code: "01012001", description: "RECEBIMENTO FISICO - PL2" },
+                    { code: "01012002", description: "EXPEDIÇÃO - PL2" },
+                    { code: "01012003", description: "ALMOX. / GESTÃO DE ESTOQUE - PL2" },
+                    { code: "02210", description: "EXPEDIÇÃO - PLANTA 1" },
+                    { code: "02220", description: "ALMOX E GESTÃO DE ESTOQUES - PLANTA 1" },
+                    { code: "02250", description: "RECEBIMENTO FISICO - PLANTA 1" },
+                    { code: "02700", description: "ALMOX E GESTÃO DE ESTOQUES - PLANTA 3" },
+                    { code: "02710", description: "EXPEDIÇÃO - PLANTA 3" },
+                ]
+            },
+            {
+                category: "P&D e Amostras",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 00-4.132 0M9.75 3.104c.621.323 1.248.688 1.855 1.085m1.855-1.085a24.299 24.299 0 01-4.132 0m4.132 0L14.25 7.5m0 0l-2.25 2.25M14.25 7.5l2.25 2.25m-2.25-2.25l-2.25-2.25m2.25 2.25l2.25-2.25M14.25 7.5l-2.25-2.25 2.25-2.25m-2.25 2.25l-2.25 2.25" /></svg>`,
+                items: [
+                    { code: "01600", description: "P&D CÁRNEOS - ADM" },
+                    { code: "01610", description: "P&D SORVETES - ADM" },
+                    { code: "1620", description: "P&D LÁCTEOS - ADM" },
+                    { code: "01630", description: "P&D AROMAS SALGADOS - ADM" },
+                    { code: "01631", description: "P&D AROMAS DOCES - ADM" },
+                    { code: "01640", description: "P&D NUTRIENTES - ADM" },
+                    { code: "1650", description: "P&D PANIFICAÇÃO - ADM" },
+                    { code: "01660", description: "AMOSTRAS" },
+                    { code: "01670", description: "P&D NUTRIÇÃO ANIMAL" },
+                ]
+            },
+            {
+                category: "Qualidade & Laboratório",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>`,
+                items: [
+                    { code: "1510", description: "GARANTIA DA QUALIDADE - ADM" },
+                    { code: "2230", description: "LABORATÓRIO FISICO QUIMICO" },
+                    { code: "2231", description: "LABORATÓRIO MICROBIOLOGICO" },
+                    { code: "2232", description: "CROMATOGRAFIA" },
+                    { code: "2241", description: "INSPEÇÃO DA QUALIDADE - GERAL" },
+                ]
+            },
+            {
+                category: "Produção, Industrial & Manutenção",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.992a6.759 6.759 0 010 1.658c0 .379.145.752.438.992l1.003.827c.48.398.668 1.05.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.992a6.759 6.759 0 010-1.658c0-.379-.145-.752-.437-.992l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`,
+                items: [
+                    { code: "02001", description: "EMBALAGEM / GASTOS OPERACIONAIS" },
+                    { code: "02002", description: "ÓLEOS E ESSENCIAS" },
+                    { code: "02003", description: "MISTURA" },
+                    { code: "02004", description: "PRODUÇÃO DE MOLHOS" },
+                    { code: "02012001", description: "MOINHO DE ACUCAR PLANTA 1" },
+                    { code: "02022000", description: "MOINHOS - PLANTA 1" },
+                    { code: "02052000", description: "PESAGEM DE ÓLEOS - PLANTA 1" },
+                    { code: "02062000", description: "MOLHOS - PLANTA 1" },
+                    { code: "02072000", description: "VERNECK'S - PLANTA 1" },
+                    { code: "02082000", description: "ADM PRODUCAO - PLANTA 1" },
+                    { code: "02200", description: "PROG. CONTROLE DA PRODUÇÃO - GERAL" },
+                    { code: "02201", description: "PLANEJAMENTO DE MATERIAIS" },
+                    { code: "02270", description: "GERENCIA INDUSTRIAL - GERAL" },
+                    { code: "2280", description: "MANUTENÇÃO INDUSTRIAL - GERAL" },
+                    { code: "02300", description: "SEGURANÇA DO TRABALHO" },
+                    { code: "02301", description: "LAVANDERIA" },
+                    { code: "02310", description: "NUTRIÇÃO - GERAL" },
+                    { code: "02312", description: "PROCESSOS E MELHORIA CONTINUA" },
+                    { code: "02400", description: "PESAGEM - PLANTA 3" },
+                    { code: "02410", description: "PESAGEM FEED - PLANTA 3" },
+                    { code: "02420", description: "NUTRIMIX - PESAGEM - PLANTA 3" },
+                    { code: "02421", description: "CELULA DE NUTRIMIX - PLANTA 3" },
+                    { code: "02430", description: "CIP DANONE" },
+                    { code: "02440", description: "PESAGEM INGR. RECHEIOS - PLANTA 3" },
+                    { code: "02450", description: "PESAGEM DE ÓLEOS - PLANTA 3" },
+                    { code: "2460", description: "PRODUÇÃO CHOCOLATE / CEL. MOINHO" },
+                    { code: "02461", description: "FRACIONAMENTO CHOCOLATE - PLANTA 3" },
+                    { code: "02470", description: "MISTURA. GRANEL FEED - PLANTA 3" },
+                    { code: "02480", description: "MISTURADORES GRANEL - PLANTA 3" },
+                    { code: "02490", description: "RECHEIOS E PASTAS - PLANTA 3" },
+                    { code: "02491", description: "ENVASADORA RECHEIOS - PLANTA 3" },
+                    { code: "02500", description: "TETRAPACK - PLANTA 3" },
+                    { code: "02510", description: "AROMAS DOCES - PLANTA 3" },
+                    { code: "02511", description: "FRACIONADORA DE POTES - PLANTA 3" },
+                    { code: "02520", description: "TORREFAÇÃO / MOAGEM - PLANTA 1" },
+                    { code: "02530", description: "CELULA DE PRODUÇÃO E ENVASE - PLANTA 3" },
+                    { code: "02540", description: "SPRAY DRYER - PLANTA 3" },
+                    { code: "02740", description: "HIGIENIZAÇÃO E LIMPEZA" },
+                    { code: "02801", description: "ADM PRODUÇÃO - PLANTA 3" },
+                ]
+            }
+        ];
+
+        const listContainer = document.getElementById('cost-center-list');
+        const searchInput = document.getElementById('search');
+        const toast = document.getElementById('toast');
+        const noResults = document.getElementById('no-results');
+
+        const renderList = (filter = '') => {
+            listContainer.innerHTML = '';
+            let resultsFound = false;
+
+            costCenterData.forEach(category => {
+                const filteredItems = category.items.filter(item => 
+                    item.code.toLowerCase().includes(filter.toLowerCase()) || 
+                    item.description.toLowerCase().includes(filter.toLowerCase())
+                );
+
+                if (filteredItems.length > 0) {
+                    resultsFound = true;
+                    const categoryElement = document.createElement('div');
+                    categoryElement.className = 'bg-white rounded-lg shadow-sm overflow-hidden';
+                    
+                    let itemsHtml = filteredItems.map(item => `
+                        <li class="flex items-center justify-between p-3 hover:bg-slate-50">
+                            <div class="flex items-center min-w-0">
+                                <p class="text-sm font-semibold text-indigo-600 w-24 sm:w-28 flex-shrink-0">${item.code}</p>
+                                <p class="text-sm text-slate-700 truncate ml-4">${item.description}</p>
+                            </div>
+                            <button class="copy-btn flex-shrink-0 ml-4 p-2 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition" data-code="${item.code}" title="Copiar código">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </li>
+                    `).join('');
+
+                    categoryElement.innerHTML = `
+                        <div class="p-4 border-b border-slate-200">
+                            <div class="flex items-center space-x-3">
+                                <div class="icon-container flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg">
+                                    ${category.icon}
+                                </div>
+                                <h2 class="text-lg font-semibold text-slate-800">${category.category}</h2>
+                            </div>
+                        </div>
+                        <ul class="divide-y divide-slate-200">
+                            ${itemsHtml}
+                        </ul>
+                    `;
+                    listContainer.appendChild(categoryElement);
+                }
+            });
+            
+            noResults.classList.toggle('hidden', resultsFound);
+        };
+        
+        searchInput.addEventListener('keyup', (e) => {
+            renderList(e.target.value);
+        });
+
+        listContainer.addEventListener('click', (e) => {
+            const copyButton = e.target.closest('.copy-btn');
+            if (copyButton) {
+                const codeToCopy = copyButton.dataset.code;
+                
+                // Use the Clipboard API if available, otherwise fallback
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(codeToCopy).then(() => {
+                        showToast();
+                    });
+                } else {
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast();
+                }
+            }
+        });
+        
+        let toastTimeout;
+        const showToast = () => {
+            clearTimeout(toastTimeout);
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        // Initial render
+        renderList();
+    </script>
+
+</body>
+</html>
